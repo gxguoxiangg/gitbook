@@ -192,22 +192,179 @@ MAC地址表安全功能：
 
 ##	MAC地址飘逸检测
 
+> Mac 地址飘逸是指交换机上一个 VLAN 内有两个端口学习到同一个 MAC 地址，后学习到的 MAC 地址表项覆盖原 MAC 地址表项的现象。
 
+###	概述
 
-##	风暴控制
-
-
-
-##	端口限速
-
+当一个 MAC 地址在两个端口之间频繁发生迁移时，即会产生 MAC 地址漂移现象。出现这种现象一般都意味着网络中存在环路，或者存在网络攻击行为。
 
 
 
+###	原理
+
+防止 MAC 地址漂移：
+
+- 配置端口 MAC 地址学习优先级。
+- 配置不允许相同优先级接口 MAC 地址漂移。
+
+MAC 地址漂移检测
+
+- 基于 VLAN 的 MAC 地址漂移检测。
+- 全局 MAC 地址漂移检测。
 
 
 
-##	DHCP Snooping 和 IP Source Guard
+###	命令示例
+
+
+
+```shell
+# 配置接口学习 MAC 地址的优先级; 缺省情况下优先级为 0
+[SW-G0/0/1] mac-learning priority <priority-id>
+
+# 配置禁止 MAC 地址漂移时报文的处理动作为丢弃; 缺省处理动作是转发
+[SW-G0/0/1] mac-learning priority flpping-defend action discard
+
+# 禁止相同优先级的接口发生 MAC 地址漂移
+[SW] undo mac-learning priority <priority-id> allow-flapping
+
+# 配置 MAC 地址漂移检测的 VLAN 白名单
+[SW] mac-address flapping detection exclude vlan {xx}
+
+# 配置发生漂移后接口的处理动作
+[SW-G0/0/1] mac-address flapping action { quit-vlan | error-down }
+
+
+# 查看 MAC 地址漂移记录
+[SW] display mac-address flapping record
+
+```
+
+
+
+
+
+##	MACsec
+
+> 提供二层数据安全传输
+
+
+
+###	概述
+
+MACsec 定义了基于以太网的数据安全通信的方法，通过逐跳设备之间数据加密来保证数据传输安全性。对应标准为 802.1AE。
+
+典型应用场景如在接入交换机和上联的汇聚或核心交换机之间部署。
+
+
+
+###	原理
+
+在两台设备上预配置相同的CAK，两台设备会通过 MKA 协议选举出一个 Key Server；Key Server 决定加密方案，Key Server 会根据 CAK 等参数使用某种加密算法生成 SAK 数据密钥并发放给对端，这样两台设备拥有相同的 SAK 数据密钥，实现对称性的加密解密。
+
+
+
+##	流量抑制和风暴控制
+
+
+
+
+
+
+
+
+
+##	DHCP Snooping 
+
+> DHCP Snooping 是 DHCP 的一种安全特性，用于保护 DHCP 客户端从合法的 DHCP 服务器获取 IP 地址，并记录 DHCP 客户端 IP 和 MAC 地址等参数的对应信息，防止针对DHCP 的攻击。
+
+
+
+###	
+
+###	术语
+
+- DHCP Snooping 信任功能
+
+- DHCP Snooping 绑定表
+
+
+
+### 原理
+
+二层接入设备启用了 DHCP Snooping 功能后，
+
+- 从 DHCP ACK 报文中提取关键信息：PC 的 MAC 地址，IP 地址，租期；
+- 获取与 PC 连接的开启 DHCP Snooping 功能的接口信息（包括接口编号和接口所属的 VLAN）
+
+通过这些信息生成 DHCP Snooping 绑定表。由于绑定表记录了对应关系，故通过对绑定表的匹配检查能够有效防范非法用户的攻击。
+
+DHCP Snooping 绑定表根据 DHCP 租期进行老化，或根据用户释放 IP 地址 时发出的 DHCP Release 报文自动删除对应表项。
+
+
+
+###	命令示例
+
+
+
+```shell
+# 全局开启 DHCP Snooping 功能
+[SW] dhcp snooping enable [ipv4 | ipv6]
+# VLAN  视图下开启 DHCP Snooping 功能
+[SW] dhcp snooping enable
+
+# VLAN 视图下配置接口为信任状态
+[SW] dhcp snooping trusted interface <interface-type interfac-number>
+
+# 接口视图下配置接口为信任状态
+[SW-G0/0/1] dhcp snooping trusted
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+##	IP Source Guard
+
+
+
+
+
+
+
+
 
 
 
 ##	防火墙高级特性：双机热备，虚拟系统
+
+
+
+
+
+
+
+##	总结
+
+
+
+- 端口隔离实现同一 VLAN 内端口之间的隔离。端口隔离模式可以分为 l2 和 all。
+- 交换机 MAC 地址表可以分为静态 MAC 地址表，动态 MAC 地址表和黑洞 MAC 地址表。
+- 端口安全通过将端口学习到的动态MAC地址转换为安全 MAC 地址或 Sticky MAC 地址，安全 MAC 地址通常与安全保护动作结合使用。
+- 开启 MAC 地址漂移检测有助于快速处理环路和被攻击的情况。
+- MACsec 定义了基于以太网的安全数据通信的方法，通过逐跳设备之间数据加密，保证数据传输安全性。
+- 流量抑制与风暴控制主要区别在于流量控制仅仅是对各种报文进行限速处理，超过阈值之后就丢弃；而风暴控制能够根据报文速率的大小采取不通的惩罚动作，包括关闭端口或者阻塞报文。
+- DHCP Snooping 技术对于防御以太网中关于终端设备自动获取 IP 的网络攻击有很大的作用，通过配置 DHCP Snooping 信任端口和 DHCP Snooping 绑定表，可以很好的防范针对 DHCP 的 网络攻击。
+- IPSG 通过查看交换机绑定表，阻止 IP 地址欺骗攻击，杜绝非法用户盗用合法 IP 进行攻击。
+- 部署防火墙双机热备可提升网络可靠性，部署防火墙虚拟系统可实现对物理设备的逻辑划分，提升资源利用率。
