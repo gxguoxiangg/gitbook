@@ -523,25 +523,39 @@ OSPF 邻居共有以下八种状态：
 
 **区域类型：**
 
-1. 普通区域：
+1. **普通区域：**
 
-   普通区域由标准区域和骨干区域组成。骨干区域由 Area 0 表示。骨干区域自身必须褒词连通，所有非骨干区域必须与骨干区域保持连通。
+   - 普通区域由标准区域和骨干区域组成。骨干区域由 Area 0 表示。骨干区域自身必须保证连通，所有非骨干区域必须与骨干区域保持连通。
 
-2. Stub 区域：
+2. **Stub 区域：**
 
-   Stub 区域的 ABR 不传播它们接收到的 AS 外部路由。Stub 区域是可选配置属性，一般位于 AS 的边界，是只有一个 ABR 的非骨干区域。
-
-   不允许 Type 4，5 LSA 进入该区域，ABR 会自动下发一条 Type 3 缺省路由。
-
-3. Totally Stub 区域：
-
-   不允许 Type 3，4，5 LSA 进入该区域，ABR 会自动下发一条 Type 3 缺省路由。
-
-   和 Stub 区域相比，Totally Stub 更彻底，拒绝 3 类 LSA 进入，只剩下唯一一条由 ABR 通告的缺省 Type 3 LSA 路由。 
-
-4. NSSA 区域：
+   - Stub 区域的 ABR 不传播它们接收到的 AS 外部路由。Stub 区域是可选配置属性，一般位于 AS 的边界，是只有一个 ABR 的非骨干区域。
 
 
+   - 不允许 Type 4，5 LSA 进入该区域，ABR 会自动下发一条 Type 3 缺省路由。
+   - 骨干区域不能配置为 Stub 区域。
+   - Stub 区域内不能存在 ASBR，因此 AS 外部的路由不能在本区域内传播。
+   - 虚连接不能穿过 Stub 区域。
+
+3. **Totally Stub 区域：**
+
+   - 不允许 Type 3，4，5 LSA 进入该区域，ABR 会自动下发一条 Type 3 缺省路由。
+
+
+   - 和 Stub 区域相比，Totally Stub 更彻底，拒绝 3 类 LSA 进入，只剩下唯一一条由 ABR 通告的缺省 Type 3 LSA 路由。 
+
+![img](http://112.74.164.59//static/uploads/2024.10.25-16.00_b6221be3.png)
+
+4. **NSSA 区域：**
+
+   - NSSA（Not So Stubby Area）是 Stub 区域的一个变形，NSAA 区域不允许存在 Type 5 LSA。
+   - NSAA 区域允许引入自治系统外部路由，携带这些路由信息的 Type 7 LSA 由 NSSA的 ASBR 产生，仅在本 NSSA 内传播。
+   - 当 Type 7 LSA 到达 NSSA 的 ABR 时，由 ABR 将 Type 7 LSA 转换成 Type 5 LSA，泛洪到整个 OSPF 区域中。
+   - NSSA 区域的 ABR 会发布 Type 7 LSA 缺省路由传播到本区域内。
+
+5. **Totally NSSA 区域：**
+
+   - 不允许发布 AS 外部路由和区域间路由，只允许发布区域内路由。
 
 ###	LSA 类型:
 
@@ -618,6 +632,8 @@ LSA（Link State Advertisement）
 Router ID
 
 DR，BDR，DR other
+
+
 
 
 
