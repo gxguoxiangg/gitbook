@@ -544,7 +544,7 @@ OSPF 邻居共有以下八种状态：
 
    - 和 Stub 区域相比，Totally Stub 更彻底，拒绝 3 类 LSA 进入，只剩下唯一一条由 ABR 通告的缺省 Type 3 LSA 路由。 
 
-![img](http://112.74.164.59//static/uploads/2024.10.25-16.00_b6221be3.png)
+![img](https://112.74.164.59//static/uploads/2024.10.25-16.00_b6221be3.png)
 
 4. **NSSA 区域：**
 
