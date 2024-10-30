@@ -1,6 +1,12 @@
-####	Windows 系统维护
+---
+title: Windows 常用运行命令
+date: 2024-10-07 00:00:00
+tags:
+    - 笔记
 
+---
 
+####	Windows 常用运行命令
 
 Win + R：
 
