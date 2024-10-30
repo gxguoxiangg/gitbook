@@ -10,7 +10,7 @@ tags:
 
 Win + R：
 
-#### CPL（Control Panel Item）命令：
+#### CPL（Control Panel Item）命令
 
 - ncpa.cpl：Network Control Panel Applet 网络连接
 - inetcpl.cpl：Internet Control Panel Internet属性
@@ -18,7 +18,7 @@ Win + R：
 - firewall.cpl：防火墙
 - powercfg.cpl：Power Configuration 电源管理
 
-#### MMC命令：
+#### MMC命令
 
 - lusrmgr.msc：本地用户和组
 - devmgmt.msc：Device Management 设备管理器
@@ -29,7 +29,7 @@ Win + R：
 - secpol.msc：Secuity Policy 安全策略
 - gpedit.msc：Group Editor
 
-#### EXE命令：
+#### EXE命令
 
 - regedit：Registry Editor 注册表编辑器
 - taskmgr：Task Manager 任务管理器

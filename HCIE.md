@@ -392,7 +392,7 @@ DHCP Snooping 绑定表根据 DHCP 租期进行老化，或根据用户释放 IP
 
 
 
-##	OSPF
+##	OSPF 基础
 
 
 
@@ -549,8 +549,8 @@ OSPF 邻居共有以下八种状态：
 4. **NSSA 区域：**
    - NSSA（Not So Stubby Area）是 Stub 区域的一个变形，NSAA 区域不允许存在 Type 5 LSA。
    - NSAA 区域允许引入自治系统外部路由，携带这些路由信息的 Type 7 LSA 由 NSSA的 ASBR 产生，仅在本 NSSA 内传播。
-   - 当 Type 7 LSA 到达 NSSA 的 ABR 时，由 ABR 将 Type 7 LSA 转换成 Type 5 LSA，泛洪到整个 OSPF 区域中。
-   - NSSA 区域的 ABR 会发布 Type 7 LSA 缺省路由传播到本区域内。
+     - 当 Type 7 LSA 到达 NSSA 的 ABR 时，由 ABR 将 Type 7 LSA 转换成 Type 5 LSA，泛洪到整个 OSPF 区域中。
+     - NSSA 区域的 ABR 会发布 Type 7 LSA 缺省路由传播到本区域内。
    
 5. **Totally NSSA 区域：**
 
@@ -636,6 +636,57 @@ OSPF 在区域内部运行的是 SPF 算法，这个算法能够保证区域内�
 
 
 
+###	OSPF 虚连接
+
+虚连接（Virtual link）是指在两台 ABR 之间通过一个非骨干区域建立一条逻辑上的连接通道。
+
+由于在部署 OSPF 时，要求所有非骨干区域与骨干区域相连。但在实际应用中，可能会因为各方面条件的限制无法满足，此时可以通过配置 OSPF 虚连接来解决这个问题。
+
+虚连接的存在增加了网络的复杂程度，而且排障困难。因此在网络规划中应该尽量避免使用虚连接，虚连接只是一种临时手段。虚链路可以看作一个表明网络中某个部分是否需要重新规划设计的标志。
+
+
+
+###	OSPF 路由聚合和路由过滤
+
+#### OSPF 路由聚合
+
+ABR 可以将具有相同前缀的路由信息聚合在一起，只发布一条路由到其他区域。
+
+通过路由聚合，可以减少路由信息，减小路由表的规模，提高设备的性能。
+
+OSPF 有两种路由聚合方式：
+
+- 区域间路由聚合
+- 外部路由聚合
+
+####	OSPF 路由过滤
+
+OSPF 支持使用路由策略对路由信息进行过滤。缺省情况 OSPF 不进行过滤。
+
+OSPF 可以使用 route-policy，访问控制列表（access-list）和地址前缀列表（prefix-list）。
+
+
+
+
+
+###	命令示例
+
+
+
+```bash
+<R1> display ospf peer	# 查看 OSPF 邻居信息
+<R1> display ospf 1 peer brief	# 查看 OSPF 邻居摘要信息
+<R1> display ospf lsdb	# 查看 LSDB 信息，会显示所有 LSA
+```
+
+
+
+
+
+##	OSPF 高级特性-快速收敛
+
+
+
 ###	OSPF 快速收敛
 
 OSPF 快速收敛扩展特性包括：
@@ -660,13 +711,6 @@ I-SPF 来更新 最短路径树，PRC 来更新路由；PRC 和 I-SPF 配合使�
 
 
 
-###	OSPF 虚连接
-
-虚连接（Virtual link）是指在两台 ABR 之间通过一个非骨干区域建立一条逻辑上的连接通道。
-
-由于在部署 OSPF 时，要求所有非骨干区域与骨干区域相连。但在实际应用中，可能会因为各方面条件的限制无法满足，此时可以通过配置 OSPF 虚连接来解决这个问题。
-
-虚连接的存在增加了网络的复杂程度，而且排障困难。因此在网络规划中应该尽量避免使用虚连接，虚连接只是一种临时手段。虚链路可以看作一个表明网络中某个部分是否需要重新规划设计的标志。
 
 
 
@@ -674,24 +718,8 @@ I-SPF 来更新 最短路径树，PRC 来更新路由；PRC 和 I-SPF 配合使�
 
 
 
-###	OSPF 路由聚合和路由过滤
 
-#### OSPF 路由聚合
 
-ABR 可以将具有相同前缀的路由信息聚合在一起，只发布一条路由到其他区域。
-
-通过路由聚合，可以减少路由信息，减小路由表的规模，提高设备的性能。
-
-OSPF 有两种路由聚合方式：
-
-- 区域间路由聚合
-- 外部路由聚合
-
-####	OSPF 路由过滤
-
-OSPF 支持使用路由策略对路由信息进行过滤。缺省情况 OSPF 不进行过滤。
-
-OSPF 可以使用 route-policy，访问控制列表（access-list）和地址前缀列表（prefix-list）。
 
 
 
@@ -734,41 +762,154 @@ OSPF IP FRR 的流量保护分为链路保护和节点链路双保护。
 
    
 
-3. 
-
-4. 
 
 
 
 
+###	OSPF 和 BFD 联动
+
+将 BFD 和 OSPF 关联起来，BFD 对链路故障的快速感应能够加快 OSPF 对于网络拓扑变化的响应。
+
+**联动的工作原理：**
+
+- 邻居状态机到达 Full 时，通知 BFD 建立 BFD 会话。
 
 
 
-###	术语
+**OSPF 与 BFD 联动的基础配置命令：**
 
-LSA（Link State Advertisement）
+1. 配置 OSPF 的 BFD 特性：
 
-Router ID
+   ```shell
+   # 在 OSPF 进程下使能 BFD 特性
+   [AR-ospf-1] bfd all-interfaces enable
+   
+   # 配置 BFD 会话的参数值
+   [AR-ospf-1] bfd all-interfaces {min-rx-interval xx | min-tx-interval xx | detect-multiplier xx | frr-binding}
+   
+   
+   ```
 
-DR，BDR，DR other
+   - min-rx-interval: 指定期望从对端接收 BFD 报文的最小接收间隔
+   - min-tx-interval: 指定向对端发送 BFD 报文的最小发送间隔
+   - detect-multiplier: 指定本地检测倍数
+   - frr-binding: 将 BFD 会话状态和接口的链路状态进行绑定，当 BFD 会话状态变为 Down 时，接口的物理层链路状态也会变为 Down，从而触发流量切换到备份路径。
+
+2. 配置指定接口的 BFD 特性：
+
+   ```shell
+   # 在开启 OSPF 的接口下使能 BFD
+   [AR-G0/0/0] opsf bfd enable
+   
+   ```
+
+   
 
 
 
 
 
+##	OSPF 高级特性-路由控制
+
+OSPF 路由控制包括：
+
+- 调整 OSPF 的接口开销
+- 设置等价路由
+- 引入外部路由
+- 路由聚合
+- 缺省路由通告
+- Filter-Policy
+- 对发送的 LSA 进行过滤
+- 设置 LSDB 中 External LSA 的最大数量
 
 
 
+####	等价路由
 
-###	命令示例
+当路由表中存在到达同一目的地址，且同一路由协议发现的多条路由时，若这几条路由的开销值也相同，那么这些路由就是等价路由，可以实现负载分担。
 
-
-
-
+设置进行负载分担的等价路由的最大数量：
 
 ```bash
-<R1> display ospf peer	# 查看 OSPF 邻居信息
-<R1> display ospf 1 peer brief	# 查看 OSPF 邻居摘要信息
-<R1> display ospf lsdb	# 查看 LSDB 信息，会显示所有 LSA
+[AR-ospf-1] maximum load-balancing xx
 ```
+
+
+
+####	缺省路由
+
+OSPF 缺省路由通常应用于下面两种情况：
+
+- 由区域边界路由器 ABR 发布 Type3 LSA，用来指导区域内路由器进行区域之间报文的转发。
+- 由自治系统边界路由器 ASBR 发布 Type 5，Type 7 LSA，用来指导 OSPF 路由域内路由器进行域外报文的转发。
+
+|       区域类型       |                 产生条件                 | 发布方式 | 产生 LSA 类型 | 泛洪范围  |
+| :------------------: | :--------------------------------------: | :------: | :-----------: | :-------: |
+|       普通区域       |    通过 default-route-advertise 配置     |   ASBR   |   Type5 LSA   | 普通区域  |
+| Stub 和 Totally Stub |                 自动产生                 |   ABR    |   Type3 LSA   | Stub 区域 |
+|      NSSA 区域       | 通过 nssa [default-route-advertise] 配置 |   ASBR   |   Type7 LSA   | NSSA 区域 |
+|  Totally NSSA 区域   |                 自动产生                 |   ABR    |   Type3 LSA   | NSSA 区域 |
+|                      |                                          |          |               |           |
+
+OSPF 路由的分级管理，Type3 缺省路由的优先级高于 Type5 或 Type7 路由。
+
+- 普通区域：
+  - 缺省情况下，普通区域内的路由器不会产生缺省路由，即使它有缺省路由。当路由器需要向 OSPF 发布缺省路由时，必须手工执行 default-route-advertise 命令，配置完成后，路由器会产生一个缺省 ASE LSA （Type 5），并且通告到整个 OSPF AS 中。
+- Stub 区域：
+  - Stub 区域不允许 AS 外部的路由（Type5 LSA）在区域内传播。区域内的路由器必须通过 ABR 学习到 AS 外部的路由。
+  - Stub 区域的 ABR 会自动产生一条缺省的 Type3 LSA 通告到整个 Stub 区域。ABR 通过该缺省路由，将到达 AS 外部的流量吸引到自己这里。
+- Totally Stub 区域：
+  - 和 Stub 区域相比，就多了不允许区域间路由（Type3 LSA）在区域内传播。区域间的路由器必须通过 ABR 学习到 AS 外部和区域间的路由。同样会自动产生一条缺省的 Type3 LSA 通告到整个 Stub 区域。
+- NSSA 区域：
+  - NSSA 区域允许 Type7 LSA 的传播，Type7 LSA 由 NSSA 区域的 ASBR 产生，当它到达 NSSA 区域的 ABR 时，可以由 ABR 转换成 Type5 LSA，并通告到其他区域。
+  - 
+- Totally NSSA 区域：
+
+
+
+####	将缺省路由通告到 OSPF 路由区域
+
+1. 通告到普通区域：
+
+   ```bash
+   # 将缺省路由通告到普通 OSPF 区域
+   [AR-ospf-1] default-route-advertise [always|permit-calculate-other] | cost xx | type xx | route-policy xx
+   
+   # 指定 Type3 Summary-LSA 的缺省开销值
+   [AR-ospf-1] defalut-route-advertise summary cost xx
+   ```
+
+   注意，import-route （OSPF）命令不能引入外部路由的缺省路由，当需要引入其他协议产生的缺省路由时，必须在 ASBR 上配置 default-route-advertise 命令，发布缺省路由到整个普通 OSPF 区域。
+
+   - always：无论本机是否存在非 OSPF 缺省路由，都会产生并发布一个描述缺省路由的 LSA。
+   - type：第一类外部路由还是第二类外部路由。
+   - 
+
+
+
+
+
+####	对发送的 LSA 进行过滤
+
+当两台路由器之间存在多条链路时，可以在某些链路上通过对发送的 LSA 进行过滤，减少不必要的重传，节省带宽资源。
+
+配置对 OSPF 接口出方向的 LSA 进行过滤：
+
+```bash
+[AR-G0/0/0] ospf filter-lsa-out {}
+```
+
+
+
+OSPF Database Overflow 概述
+
+通过设置 LSDB 中 External LSA （Type5, 7）的最大条目数，可以动态限制数据库的规模。
+
+```bash
+[AR-ospf-1] lsdb-overflow-limit xx
+```
+
+![image-20241030171236986](C:\Users\46823\AppData\Roaming\Typora\typora-user-images\image-20241030171236986.png)
+
+
 
