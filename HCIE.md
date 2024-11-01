@@ -568,6 +568,229 @@ Router ID 有手动配置和设备自动选取两种选取方式。在实际网�
 
 
 
+#	路由策略
+
+定义：
+
+路由策略是通过一系列工具或方法对路由进行各种控制的策略。该策略能够影响到路由产生，发布，选择等，进而影响报文的转发路径。工具包括 ACL，route-policy，ip-prefix，filter-policy 等。
+
+路由策略的用途主要包括两个方面：
+
+- 对路由信息进行过滤。
+- 修改路由的属性。
+
+
+
+##	路由策略的实现机制
+
+路由策略的核心内容是过滤器，通过使用过滤器，可以定义一组匹配规则。
+
+| 过滤器                             | 应用范围       | 匹配条件                                 |
+| ---------------------------------- | -------------- | ---------------------------------------- |
+| 访问控制列表（ACL）                | 各动态路由协议 | 入接口，源目的地址，协议类型，源目端口。 |
+| 地址前缀列表（IP-Prefix List）     | 各动态路由协议 | 源目地址，下一跳                         |
+| AS路径过滤器（AS-Path-Filter）     | BGP            | AS 路径属性                              |
+| 团体属性过滤器（Community-Filter） | BGP            | 团队属性                                 |
+| Route-Policy                       | 各动态路由协议 | ... ...                                  |
+
+Route-Policy 是一种综合过滤器，它可以使用 ACL，地址前缀列表等六种过滤器作为匹配条件来进行路由过滤，并且可以修改通过过滤的路由的属性。
+
+
+
+###	访问控制列表（ACL）
+
+访问控制列表 ACL 是一系列过滤规则的集合，可以称为规则组。在每个规则组中，所有过滤规则是具有前后顺序的。ACL 本身只是一组规则的集合，它只是通过过滤规则对报文进行了分类，因此 ACL 需要与路由策略配合使用，才能实现过滤报文的功能。
+
+###	地址前缀列表（IP-Prefix List）
+
+地址前缀列表是一种包含一组路由信息过滤规则的过滤器，用户可以在规则中定义前缀和掩码范围，用于匹配路由信息的目的网段地址或下一跳地址。地址前缀列表可以应用在各种动态路由协议中。和 ACL 相比，配置简单应用灵活。但是当需要过滤的路由数量较大，且没有相同的前缀时，匹配地址前缀列表会比较繁琐。
+
+####	地址前缀列表的过滤原则
+
+IP-Prefix List 过滤路由的原则可以总结为：
+
+- 顺序匹配：按索引号从小到大顺序进行匹配，同一个地址前缀列表中的多条表项设置不同的索引号，可能会有不同的过滤结果。
+- 唯一匹配：待过滤路由只要与一个表项匹配，就不会再去尝试匹配其他表项。
+- 默认拒绝：默认所有未与任何一个表项匹配的路由都视为未通过地址前缀列表的过滤。因此在一个地址前缀列表中创建一个或多个deny模式的表项后，需要创建一个表项来允许所有其他路由通过。
+
+
+
+####	IP-Prefix List 中掩码的匹配
+
+与 ACL 相比一大优势就是可以对路由的掩码进行匹配，常用格式如下：
+
+**ip ip-prefix** *ip-prefix-name* [ **index** *index-number* ] { **permit** | **deny** } *ipv4-address* *mask-length* [ **match-network** ] [ **greater-equal** *greater-equal-value* ] [ **less-equal** *less-equal-value* ]
+
+命令示例：
+
+```bash
+[System] ip ip-prefix aa index 10 permit 1.1.1.1 24
+```
+
+路由 1.1.1.1/24 permit，其他都 deny。
+
+
+
+####	地址前缀列表和 ACL 的区别
+
+ACL 和 IP-Prefix List 都可以对路由进行筛选，ACL 匹配路由时只能匹配路由的网络号，无法匹配掩码，也就是前缀长度；而 IP-Prefix List 比 ACL 更为灵活，可以匹配网络号和掩码，增强了路由匹配的精确度。
+
+如 Switch 上有两条静态路由：192.168.0.0/16 和 192.168.0.0/24，如果只想将 192.168.0.0/16 这1条路由引入 OSPF 中。
+
+首先尝试使用 ACL：
+
+1. 配置基本 ACL 2001：
+
+   ```bash
+   [Switch] acl 2001
+   [Switch-acl-basic-2001] rule permit source 192.168.0.0 0.0.255.255
+   [Switch-acl-basic-2001] quit
+   ```
+
+2. 配置 route-policy RP 的节点10，如果匹配基本ACL 2001，则允许通过。其他所有未匹配成功的路由都被拒绝通过：
+
+   ```bash
+   [Switch] route-policy RP permit node 10
+   [SWitch-route-policy] if-match acl 2001
+   [Switch-route-policy] quit
+   ```
+
+3. 配置在 OSPF 路由中引入通过 route-policy RP 过滤的静态路由：
+
+   ```bash
+   [Switch] ospf
+   [Switch-ospf-1] import-route static route-policy RP
+   ```
+
+完成后，查看路由表发现依然引入了两条静态路由。原因在于 ACL 2001 规则 rule permit source 192.168.0.0 0.0.255.255 中，0.0.255.255 实际上是通配符，不是掩码长度。
+
+接下来尝试使用 IP-Prefix List：
+
+1. 配置 IP-Prefix List：
+
+   ```bash
+   [Switch] ip ip-prefix huawei index 10 permit 192.168.0.0 16
+   ```
+
+2. 配置 route-policy RP 的节点 10，如果匹配地址前缀列表 huawei，则允许通过；其他所有未匹配上的路由都将默认拒绝。
+
+   ```bash
+   [Switch] route-policy RP permit node 10
+   [Switch-route-policy] if-match ip-prefix huawei
+   ```
+
+3. 配置在 OSPF 路由中引入通过 route-policy RP 过滤的静态路由。
+
+   ```bash
+   [Switch] ospf
+   [Switch] import-route static route-policy RP
+   ```
+
+   
+
+
+
+
+
+###	路由策略工具之间的调用关系
+
+![image-20241101104950392](C:\Users\46823\AppData\Roaming\Typora\typora-user-images\image-20241101104950392.png)
+
+- 条件工具：把需要的路由抓取出来。
+- 策略工具：把抓取出来的路由执行某个动作，比如允许，拒绝，修改属性值等。
+- 调用工具：用于将路由策略应用到某个具体的路由协议里面，使其生效。
+
+
+
+###	Route-Policy 原理和应用
+
+Route-Policy 是一种比较复杂的过滤器，它不仅可以匹配给定路由信息的某些属性，还可以在条件满足时改变路由信息的属性。
+
+Route-policy 的组成：
+
+- **节点号：**
+
+  一个 Route-Policy 可以由多个节点（node）构成。路由匹配 Route-Policy 时遵循以下两个规则：
+
+  - 顺序匹配
+  - 唯一匹配：Route-Policy 各节点号之间是 ”或“ 关系，只要通过一个节点的匹配，就认为通过该过滤器，不再进行其他节点的匹配。
+
+- **匹配模式：**
+
+  - permit：
+    - 如果通过，将执行该节点的 apply 子句。
+    - 不通过，将进入下一个节点继续匹配。
+  - deny：
+    - 如果满足该节点所有 if-match 子句时，将被拒绝通过该节点，apply 子句不会被执行。
+    - 如果不满足节点的 if-match 子句，将进入下一各节点继续匹配。
+
+- **if-match 语句：**
+
+  用来定义一些匹配条件，每一个节点可以含有多个 if-match 子句，也可以不含 if-match 子句。如果某个 permit 节点没有配置任何 if-match 子句，则该节点匹配所有的路由。
+
+- **apply 语句：**
+
+  路由通过 Route-Policy 过滤时，系统按照 apply 子句指定的动作对路由信息的一些属性进行设置。
+
+route-policy A **permit** node **10** **if-match xxx apply xxx**
+
+####	Route-Policy 匹配规则
+
+Route-Policy 每个 node 节点的过滤结果要综合以下两点：
+
+- Route-Policy 的 node 节点的匹配模式。
+- if-match 子句中包含的匹配条件。
+
+| Mode   | Rule   | 匹配结果                                                     |
+| ------ | ------ | ------------------------------------------------------------ |
+| permit | permit | 匹配成功则执行apply，然后结束匹配                            |
+| -      | deny   | 无论匹配是否成功，都将继续向下匹配；匹配该节点 if-match 子句的路由在本节点不允许通过 Route-Policy |
+|        |        |                                                              |
+| deny   | permit | 匹配成功，则匹配的路由不允许通过 Route-Policy，且匹配结束。匹配失败则继续向下匹配。 |
+| -      | deny   | 无论匹配是否成功，都将继续向下匹配。                         |
+
+默认所有未匹配的路由将被拒绝通过 Route-Policy。如果 Route-Policy 中定义了一个以上的节点。因为：
+
+- 如果某路由信息没有通过任一节点，则认为该路由信息没有通过该 Route-Policy。
+- 如果 Route-Policy 的所有节点都是 deny 模式，则没有路由信息可以通过该 Route-Policy。 
+
+
+
+##	Filter-Policy 原理和应用
+
+filter-policy 只能过滤路由信息，无法过滤 LSA，不能修改路由属性值。
+
+####	Filter-Policy 在 OSPF 协议中的应用
+
+filter-policy 在 OSPF 中生效的规则如下：
+
+- **filter-policy import：**实际上是对 OSPF 计算出来的路由进行过滤，不是对发布和接收的 LSA 进行过滤。
+- **filter-porlicy export：**对引入的路由在发布时进行过滤，只将满足条件的外部路由转换为 Type5 LSA （AS-external-LSA）并发布出去。这样可以在引入外部路由时进行特定的过滤，防止形成路由环路。
+
+**通过 filter-policy 对 OSPF 接收的路由过滤（区域内）示例：**
+
+需求描述，三台交换机同属于 OSPF Area 0 区域，SWA 发布测试网段 10.1.1.0/24，要求在 SWB 上部署 filter-policy  import，使得 SWB 的路由表中不允许出现 10.1.1.0/24 这条路由。
+
+1. 在 SWB 上定义一个 IP Prefix List，抓取符合条件的路由：
+
+   ```bash
+   [SWB] ip ip-prefix AA index 10 deny 10.1.1.0 24
+   [SWB] ip ip-prefix AA index 20 permit 0.0.0.0 0 less-equal 32
+   ```
+
+2. 在 SWB 的 OSPF 视图中，部署 filter-policy import：
+
+   ```bash
+   [SWB] ospf
+   [SWB-ospf-1] filter-policy ip-prefix AA import
+   ```
+
+虽然 SWB 上的路由已经被过滤掉，但是 LSA 信息会继续传递给 SWC，所以 SWC 继续存在 10.1.1.0/24 这条路由。故 Filter-Policy 只能过滤路由信息，不能过滤 LSA 信息。
+
+**通过 filter-policy 对 OSPF 接收的路由过滤（区域间）**
+
+
+
 
 
 #	IGP 高级特性
