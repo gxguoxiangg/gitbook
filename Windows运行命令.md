@@ -32,6 +32,7 @@ Win + R：
 #### EXE命令
 
 - regedit：Registry Editor 注册表编辑器
+- netplwiz：用户账户配置器
 - taskmgr：Task Manager 任务管理器
 - msconfig：Microsoft System Configuration 系统配置
 - calc：Calculator 计算器
