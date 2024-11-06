@@ -1,5 +1,5 @@
 ---
-title: HCIE
+                                                                                                                                                                     title: HCIE
 date: 2024-10-14 12:00:00
 tags:
     - 笔记
@@ -1318,3 +1318,89 @@ OSPF Database Overflow 概述
 
 
 
+##	IS-IS
+
+中间系统到中间系统 IS-IS（Intermediate System to Intermediate Sytem）属于内部网关协议 IGP，用于自治系统内部。IS-IS 也是一种链表状态协议，使用最短路径优先 SPF 算法进行路由计算。
+
+
+
+###	原理概述
+
+
+
+####	IS-IS 的拓扑结构
+
+IS-IS 在自治系统内采用骨干区域和非骨干区域两级的分层结构，一般来说：
+
+- Level 1 路由器：非骨干区域
+- Level 1-2 路由器：骨干区域
+- Level 2 路由器：骨干区域
+
+IS-IS 和 OSPF 的不同点：
+
+- 在 IS-IS 中，每个路由器都只属于一个区域；而在 OSPF 中，一个路由器的不同接口可以属于不同的区域。
+- 在 IS-IS 中，单个区域没有骨干和非骨干区域的概念；而在 OSPF 中，Area 0 被定义为骨干区域。
+- 在 IS-IS中，Level 1 和 Level 2 级别的路由都采用 SPF 算法，分别生成最短路径树 SPT；而在 OSPF 中，只有在同一个区域内才使用 SPF 算法，区域之间的路由需要通过骨干区域来转发。
+
+
+
+####	IS-IS 路由器的分类
+
+- **Level 1 路由器**
+  1. 负责区域内的路由，只与同一区域的 Level 1 和 Level 1-2 路由器形成邻居关系，属于不同区域的 Level 1 路由器不能形成邻居关系。
+  2. Level 1 路由器只负责维护 Level 1 的 LSDB，该 LSDB 包含本区域的路由信息，到本区域外的报文转发给最近的 Level 1-2 路由器。
+- **Level 2 路由器**
+  1. 负责区域间的路由，可以与同一或者不同区域的 Level 2 路由器或其他区域的 Level 1-2 路由器形成邻居关系。
+  2. Level 2 路由器维护一个 Level 2 的 LSDB，该 LSDB 包含区域间的路由信息。
+  3. 所有 Level 2 级别（即形成 Level 2 邻居关系）的路由器组成路由域的骨干网，负责在不同区域间通信。路由域中的 Level 2 级别的路由器必须是物理连续的，以保证骨干网的连续性。只有 Level 2 级别的路由器才能直接与区域外的路由器交换数据报文或路由信息。
+- **Level 1-2 路由器**
+  1. 同时属于 Level 1 和 Level 2 的路由器称为 Level 1-2 路由器，它可以与同一区域的 Level 1 和 Level 1-2 路由器形成 Level 1 邻居关系，也可以与其他区域的 Level 2 和 Level 1-2 路由形成 Level 2 邻居关系。
+  2. Level 1 路由器必须通过 Level 1-2 路由器才能连接至其他区域。
+  3. Level 1-2 路由器维护两个 LSDB，Level 1 的 LSDB 用于区域内路由，Level 2 的 LSDB 用于区域间路由。
+
+
+
+####	DIS 和伪节点
+
+在广播网络中，IS-IS 需要在所有路由器中选举一个路由器作为 DIS（Designated Intermediate System）。DIS 用来创建和更新伪节点，并负责生成伪节点的链路状态协议数据单元 LSP（Link state Protocol Data Unit），用来描述这个网络上有哪些网络设备。
+
+伪节点用来模拟网络中的一个虚拟节点，并非真实的路由器。使用伪节点可以简化网络拓扑，减少资源的消耗。
+
+Level 1 和 Level 2 的 DIS 是分别选举的，用户可以为不同级别的 DIS 选举设置不同的优先级。DIS 优先级数值大的被选为 DIS。如果优先级数值最大的路由有多台，则其中 MAC 地址最大的路由器会被选中。不同级别的 DIS 可以是同一台路由器，也可以是不同的路由器。
+
+IS-IS 中的 DIS 和 OSPF 中的DR 的区别：
+
+- IS-IS 中，优先级为 0 路由器也参加 DIS 的选举，而 OSPF 中优先级为 0 的路由器不参与 DR 的选举。
+- IS-IS 广播网中，当有新的路由器加入，并符合成为 DIS 的条件时，这个路由器会被选中成为新的 DIS，原有的伪节点被删除。此更改会引起一组新的 LSP 泛洪。而在 OSPF 中，是终身制的。
+- IS-IS 广播网中，同一网段上的同一级别的路由器之间都会形成邻接关系，包括所有的非 DIS 路由器之间也会形成领接关系。而在 OSPF 中，路由器只与 DR 和 BDR 建立领接关系。
+
+LSDB 同步仍然依靠 DIS 来保证。
+
+
+
+####	IS-IS 的报文类型
+
+IS-IS 报文有以下几种类型:
+
+- Hello PDU
+
+  Hello 报文用于建立和维持邻居关系，也称伪 IIH（IS-toIS Hello PDUs）。其中，广播网中的 Level 1 IS-IS 使用 Level 1 LAN IIH；广播网中的 
+
+- LSP
+
+  链路状态报文 LSP（Link State PDUs）用于交换链路状态信息。LSP 分为两种：Level 1 LSP 和 Level 2 LSP。
+
+- SNP
+
+  序列号报文 SNP（Sequence Number PDUs）通过描述全部或部分数据库的 LSP 来同步各 LSDB，从而维护 LSDB 的完整和同步。
+
+
+
+####	IS-IS 邻居关系的建立
+
+IS-IS 按如下原则建立邻居关系：
+
+- 只有同一层次的相邻路由器才可能成为邻居。
+- 对于 Level 1 路由器来说，区域号必须一致。
+- 链路两端 IS-IS 接口的网络类型必须一致。
+- 链路两端 IS-IS 接口的地址必须处于同一网段。
