@@ -536,7 +536,7 @@ Router ID 有手动配置和设备自动选取两种选取方式。在实际网�
 配置示例：
 
 ```bash
-[AR] ip route-static xx-xx-xx-xx mask xx preference xx tag xx
+[AR] ip route-static xx-xx-xx-xx '掩码' '下一跳' `preference` `tag`
 ```
 
 在配置静态路由时，如果没有指定优先级，就会使用缺省优先级。
@@ -563,7 +563,7 @@ Router ID 有手动配置和设备自动选取两种选取方式。在实际网�
 缺省情况下，没有配置静态路由永久发布。
 
 ```bash
-[AR] ip route-static xx-xx-xx-xx .... permanent
+[AR] ip route-static xx-xx-xx-xx .... f
 ```
 
 
@@ -732,7 +732,11 @@ Route-policy 的组成：
 
   路由通过 Route-Policy 过滤时，系统按照 apply 子句指定的动作对路由信息的一些属性进行设置。
 
-route-policy A **permit** node **10** **if-match xxx apply xxx**
+route-policy A **permit** node **10** 
+
+**if-match xxx **
+
+**apply xxx**
 
 ####	Route-Policy 匹配规则
 
@@ -1393,7 +1397,7 @@ IS-IS 报文有以下几种类型:
 - SNP
 
   1. 序列号报文 SNP（Sequence Number PDUs）通过描述全部或部分数据库的 LSP 来同步各 LSDB，从而维护 LSDB 的完整和同步。
-  2. SNP 包括全序列号报文 CSNP（Complete SNP） 和部分序列号报文 PSNP（Partial SNP），进一步又可分为 Level 1 CSNP ，Level 2 CSNP，Level 1 PSNP，Level 2 PSNP。
+  2. SNP 包括全序列号报文 CSNP（Compl3wete SNP） 和部分序列号报文 PSNP（Partial SNP），进一步又可分为 Level 1 CSNP ，Level 2 CSNP，Level 1 PSNP，Level 2 PSNP。
   3. CSNP 包括 LSDB 中所有 LSP 的摘要信息，从而可以在相邻路由器间保持 LSDB 的同步。在广播网络上，CSNP 由 DIS 定期发送（缺省发送周期 10s）。
   4. PSNP 只列举最近收到的一个或多个 LSP 的序号，它能够一次对多个 LSP 进行确认，当发现 LSDB 不同步时，也用 PSNP 来请求邻居发送新的 LSP。
 
@@ -1514,4 +1518,4 @@ IS-IS GR 过程由 GR-Restarter 和 GR-Helper 配合完成。
 - GR-Restarter：具备 GR 能力，且要进行 GR 的设备。
 - GR-Helper：具备 GR 能力，辅助 GR 设备完成 GR 功能的设备，GR-Restarter 一定具有 GR-Helper 的能力。
 
-为了实现 GR，IS-IS
+为了实现 GR，IS-IS  
