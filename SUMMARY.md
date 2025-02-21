@@ -11,3 +11,5 @@
 * [Python](newpython.md)
 * [工具网站存档](工具网站存档.md)
 * [开源工具存档](开源工具存档.md)
+
+- [RHCE](RHCE.md)
