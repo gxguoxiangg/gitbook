@@ -17,6 +17,9 @@ Win + R：
 - appwiz.cpl：Application Wizard 卸载或更改程序
 - firewall.cpl：防火墙
 - powercfg.cpl：Power Configuration 电源管理
+- desk.cpl：显示设置
+- main.cpl：鼠标操控设置
+- inetcpl.cpl：internet 属性
 
 #### MMC命令
 
@@ -26,7 +29,7 @@ Win + R：
 - diskmgmt.msc：磁盘管理程序
 - compmgmt.msc：计算机管理，包含以上 msc
 - certmgr.msc：Certificate Manager 系统证书管理器
-- secpol.msc：Secuity Policy 安全策略
+- secpol.msc：Secuity Policy 本地安全策略
 - gpedit.msc：Group Editor
 
 #### EXE命令
@@ -43,3 +46,6 @@ Win + R：
 - mspaint：Microsoft Paint 画图工具
 - dxdiag：DirectX Diagnosis DirectX诊断工具
 - snippingtool：Snipping Tool 截图工具
+- cleanmgr：垃圾清理
+- resmon：Resource Monitor
+- 
