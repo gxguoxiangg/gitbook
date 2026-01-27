@@ -6,6 +6,7 @@
 * [桌面问题](桌面问题.md)
 * [Windows 常用运行命令](Windows运行命令.md)
 * [系统封装指南](系统封装.md)
+* [文本处理](文本处理.md)
 * [Scripts](Scripts.md)
 * [Shell](Shell.md)
 * [Python](newpython.md)
@@ -14,10 +15,11 @@
 
 - [RHCE](RHCE.md)
 
-- [2025](2025interview.md)
+- [2025interview](2025interview.md)
 
 - [华三](华三.md)
 
 - [华为](华为.md)
 
   
+
