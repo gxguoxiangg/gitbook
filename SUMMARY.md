@@ -15,11 +15,13 @@
 
 - [RHCE](RHCE.md)
 
+- [Linux](Linux.md)
+
 - [2025interview](2025interview.md)
 
 - [华三](华三.md)
 
 - [华为](华为.md)
 
-  
+- [nmp_exporter + prometheus + grafana 监控网络设备](SNMP.md)
 

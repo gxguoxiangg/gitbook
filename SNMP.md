@@ -1,4 +1,8 @@
-####	使用 SNMP 监控网络设备
+
+
+###	使用 snmp_exporter + prometheus + grafana 监控网络设备
+
+
 
 大致步骤：
 
@@ -147,7 +151,7 @@ modules:
         ignore: true
       ifOperStatus:
         ignore: true
-    
+    # 过滤掉1.3.6.1.2.1.2.2.1.7不等于1的值
     filters:
       dynamic:
         - oid: 1.3.6.1.2.1.2.2.1.7
@@ -172,6 +176,56 @@ modules:
 
 需要使用 Go 编译源码生成 generator.exe。这里建议在 Linux 环境进行编辑，Windows下太多依赖难以安装。
 
+Linux安装Go环境：
+
+1. 下载Go安装包：
+
+   ```apl
+   https://go.dev/dl/
+   ```
+
+2. 解压到系统目录：
+
+   ```bash
+   sudo tar -C /usr/local -xzf go1.25.0.linux-amd64.tar.gz
+   ```
+
+   这会在 `/usr/local/go` 下创建 Go 的标准安装目录结构：
+
+   ```bash
+   /usr/local/go/
+   ├── bin/
+   ├── pkg/
+   └── src/
+   ```
+
+3. 配置环境变量
+
+   在 `.bashrc`中写入：
+
+   ```bash
+   export PATH=$PATH:/usr/local/go/bin
+   export GOPATH=$HOME/go
+   export GOBIN=$GOPATH/bin
+   export PATH=$PATH:$GOBIN
+   ```
+
+4. 使能环境变量
+
+   ```bash
+   source .bashrc
+   # 验证 Go 是否安装成功
+   go version
+   ```
+
+5. 换源
+
+   ```bash
+   go env -w GOPROXY=https://goproxy.cn,direct
+   ```
+
+编译Go：
+
 ```bash
 cd generator/
 go build
@@ -183,6 +237,10 @@ go build
 ./generator --fail-on-parse-errors generate -m ./mibs/ -g ./gx.yml -o snmp_gx.yml
 ```
 
+注意，mibs目录下需要直接是mib文件，不能是子目录。
+
+
+
 H3C MIB 下载：
 
 ComwareV5：https://www.h3c.com/cn/d_200905/635750_473262_0.htm
@@ -193,13 +251,13 @@ ComwareV9：https://www.h3c.com/cn/d_202310/1943062_473262_0.htm
 
 
 
-####	运行 *snmp_exporter.exe*
+####	2.运行 *snmp_exporter.exe*
 
 将 *snmp.yml*，放进指定目录中，运行 snmp_exporter.exe：
 
 ```bash
 cd snmp_exporter-0.29.0.windows-amd64/
-./snmp——exporter.exe
+./snmp_exporter.exe
 ```
 
 此时，浏览器应该可以打开 http://localhost:9916，可以使用此链接查询测试： 
@@ -208,13 +266,13 @@ http://localhost:9116/snmp?target=10.34.32.1&auth=auth_h3c&module=h3c_common
 
 
 
-####	编辑 *prometheus.yml* 后，运行 prometheus.exe
+####	3.编辑 *prometheus.yml* 后，运行 prometheus.exe
 
 编辑 *prometheus.yml* ，结合自定义的 *yml* 文件，示例如下：
 
 ```yaml
 global:
-  scrape_timeout: 15s
+  scrape_timeout: 30s
 
 scrape_configs:
   - job_name: "CORE"
@@ -237,4 +295,12 @@ scrape_configs:
 ```
 
 
+
+####	4.运行grafana
+
+运行grafana，默认地址是：`localhost:3000`，默认账户密码都是：`admin`。
+
+- 在grafana里添加数据源为prometheus。
+- 编辑grafana的仪表盘。
+- 增加用户，限制权限。
 
