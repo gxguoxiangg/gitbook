@@ -23,5 +23,5 @@
 
 - [华为](华为.md)
 
-- [nmp_exporter + prometheus + grafana 监控网络设备](SNMP.md)
+- [prometheus + grafana 监控网络设备](SNMP.md)
 
