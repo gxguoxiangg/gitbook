@@ -333,9 +333,15 @@ $db_login = 'mrbs';
 $db_password = 'StrongPasswordHere';
 ```
 
+4.安装语言环境
 
-
-
+```bash
+# 查看系统的环境
+locale -a
+# 安装更多语言环境
+sudo locale-gen zh_CN.UTF-8
+sudo update-locale
+```
 
 
 
