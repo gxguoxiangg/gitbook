@@ -1,7 +1,5 @@
 #	Summary
 
-
-
 * [Readme](README.md)
 * [桌面问题](桌面问题.md)
 * [Windows 常用运行命令](Windows运行命令.md)
@@ -14,16 +12,10 @@
 * [开源工具存档](开源工具存档.md)
 
 - [RHCE](RHCE.md)
-
 - [Linux](Linux.md)
-
-- [2025interview](2025interview.md)
-
+- [问与答](2025interview.md)
 - [华三](华三.md)
-
 - [华为](华为.md)
-
 - [prometheus + grafana 监控网络设备](SNMP.md)
-
-- [jumpserver 堡垒机安装](jumpserver.md)
-- 
+- [OpenWrt](OpenWrt.md)
+- [综合](综合.md)

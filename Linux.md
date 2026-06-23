@@ -114,6 +114,30 @@ sudo nmcli dev wifi connect "YourSSID" password "YourPassword"
 
 
 
+对于有线连内网，无线来外网这样的双网络连接，可能需要如下配置：
+
+```bash
+# 添加内网路由
+sudo ip route add 10.0.0.0/8 via 10.34.34.1 dev "eth0"
+
+# 添加外网的默认路由
+sudo ip route add default via 192.168.1.1 dev "wlx12131"
+
+# 删除所有默认路由
+sudo ip route del default 2> /dev/null
+
+```
+
+
+
+
+
+
+
+
+
+
+
 
 
 ####	Python
@@ -439,12 +463,4 @@ ctrl-b space
 # -T: 按照可读时间戳显示
 dmesg -T
 ```
-
-
-
-
-
-
-
-您好，深圳基地目前上网需要账号登录认证。基地后续工程验收、招商引资等会有来宾访问基地，存在上网需求。此类人员没有账号无法上网，请问是否有申请访客上网账号这类操作，或者有其他解决方案？烦请告知相关流程，谢谢。
 
