@@ -18,4 +18,5 @@
 - [华为](华为.md)
 - [prometheus + grafana 监控网络设备](SNMP.md)
 - [OpenWrt](OpenWrt.md)
+- [算法](算法.md)
 - [综合](综合.md)
